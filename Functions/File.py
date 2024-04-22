@@ -33,19 +33,19 @@ def listdict_to_df(data):
     return df
 
 
-def saveExcel(data={}, path='', file_name='excel', sheet_name='sheet'):
+def saveExcel(data={}, path='', file_name='excel', sheet_name='sheet', orient='columns'):
     try:
         if isinstance(data, list) or isinstance(data, np.ndarray):
             data = listdict_to_df(data)
         elif isinstance(data, dict):
-            data = pd.DataFrame.from_dict(data, orient='index')
+            data = pd.DataFrame.from_dict(data, orient=orient)
 
         if (file_name + '.xlsx') in os.listdir(path):
+            print(f'{path}{file_name}.xlsx 생성')
             with pd.ExcelWriter((path + file_name + '.xlsx'), engine='openpyxl', mode='a') as writer:
                 data.to_excel(writer, sheet_name=sheet_name)
             print(f'{path}{file_name}.xlsx => {sheet_name} 저장')
         else:
-            print(f'{path}{file_name}.xlsx_생성')
             with pd.ExcelWriter((path + file_name + '.xlsx'), engine='openpyxl') as writer:
                 data.to_excel(writer, sheet_name=sheet_name)
             print(f'{path}{file_name}.xlsx => {sheet_name} 저장')
@@ -80,4 +80,23 @@ def readTxtWriteExcel(read_txt_path, write_excel_path, excel_name, sheet_name):
 
     except Exception as e:
         print(f'readTxt Error: {e}')
+
+
+def readTxtToDict(read_txt_path, fields = []):
+    '''
+
+    :param read_txt_path:
+    :param field: 원하는 필드(열)만 추출
+    :return: dict{field: [value,,,], ,,,}
+    '''
+    try:
+        if len(fields) != 0:
+            df = pd.read_csv(read_txt_path, sep='\t')[fields]
+            data = {col: df[col].tolist() for col in df.columns}
+        else:
+            data = pd.read_csv(read_txt_path, sep='\t').to_dict()
+
+        return data
+    except Exception as e:
+        print(f'readTxtToDict Error: {e}')
 
