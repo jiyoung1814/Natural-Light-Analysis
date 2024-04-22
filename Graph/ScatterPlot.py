@@ -29,6 +29,10 @@ colors = ['black', 'red', 'blue', 'orange', 'purple', 'gray']
 
 
 def struct_ampm_scatterplot(X_axis, Y_axis):
+    if Y_axis.isdigit():
+        Y_axis = 'Spectral Irradiance[W/m^2]'
+    if X_axis == 'elevation':
+        X_axis = X_axis + "[°]"
     gs = GridSpec(2, 2)
     fig = plt.figure(figsize=(16, 8))
     plt.subplots_adjust(wspace=0.2, hspace=0.5)
@@ -36,17 +40,16 @@ def struct_ampm_scatterplot(X_axis, Y_axis):
     ax1 = fig.add_subplot(gs[0, 0])
     ax1.set_xlabel(X_axis)
     ax1.set_ylabel(Y_axis)
-    ax1.set_title('am')
+    plt.title("AM")
 
     ax2 = fig.add_subplot(gs[0, 1])
     ax2.set_xlabel(X_axis)
     ax2.set_ylabel(Y_axis)
-    ax2.set_title('pm')
+    plt.title("PM")
 
     ax3 = fig.add_subplot(gs[1, :])
     ax3.set_xlabel(X_axis)
     ax3.set_ylabel(Y_axis)
-    ax3.set_title('daily')
 
     return plt, ax1, ax2, ax3
 
@@ -54,28 +57,37 @@ def struct_ampm_scatterplot(X_axis, Y_axis):
 def draw_ampm_scatterplot(X_axis, Y_axis, data1, data2, draw_regression=False):
     plt, ax1, ax2, ax3 = struct_ampm_scatterplot(X_axis, Y_axis)
 
-    ax1.scatter('x', 'y', data=data1, color='lightgray', s=8)
-    ax1.scatter('filtered_x', 'filtered_y', data=data1, color='red', s=8)
+    x_color = 'lightgray'
+    y_color = 'gray'
+    plot_color = 'black'
+    plot_label = '-' # Solid: '-', Dashed: '--', Dotted: ':', Dash-dot: '-.'
+
+    ax1.scatter(f'{X_axis}', f'{Y_axis}', data=data1, color=x_color, s=8, label = 'all')
+    ax1.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data1, color=y_color, s=8, label = 'filtered')
     if draw_regression:
-        ax1.plot('x_values', 'y_predict', '--', data=data1, color="darkgreen")
-        ax1.text(min(data1['filtered_x']), max(data1['filtered_y']), data1['equation'], fontsize=6)
+        ax1.plot(f'regression_{X_axis}', f'regression_{Y_axis}', plot_label, data=data1, color=plot_color, label = 'regression', linewidth=3)
+        # ax1.text(min(data1['filtered_x']), max(data1['filtered_y']), data1['equation'], fontsize=6)
+    ax1.legend()
+    ax1.set_ylim(0, None)
 
-    ax2.scatter('x', 'y', data=data2, color='lightgray', s=8)
-    ax2.scatter('filtered_x', 'filtered_y', data=data2, color='red', s=8)
+    ax2.scatter(f'{X_axis}', f'{Y_axis}', data=data2, color=x_color, s=8, label = 'all')
+    ax2.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data2, color=y_color, s=8, label = 'filtered')
     if draw_regression:
-        ax2.plot('x_values', 'y_predict', '--', data=data2, color="darkgreen")
-        ax2.text(min(data2['filtered_x']), max(data2['filtered_y']), data2['equation'], fontsize=6)
-
-    ax3.scatter('x', 'y', data=data1, color='lightgray', s=8)
-    ax3.scatter('x', 'y', data=data2, color='lightgray', s=8)
-    ax3.scatter('filtered_x', 'filtered_y', data=data1, color='red', s=8)
-    ax3.scatter('filtered_x', 'filtered_y', data=data2, color='blue', s=8)
+        ax2.plot(f'regression_{X_axis}', f'regression_{Y_axis}', plot_label, data=data2, color=plot_color, label = 'regression', linewidth=3)
+        # ax2.text(min(data2['filtered_x']), max(data2['filtered_y']), data2['equation'], fontsize=6)
+    ax2.legend()
+    ax2.set_ylim(0, None)
+    #
+    ax3.scatter(f'{X_axis}', f'{Y_axis}', data=data1, color=x_color, s=8)
+    ax3.scatter(f'{X_axis}', f'{Y_axis}', data=data2, color=x_color, s=8)
+    ax3.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data1, color=y_color, s=8)
+    ax3.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data2, color=y_color, s=8)
 
     if draw_regression:
-        ax3.plot('x_values', 'y_predict', '--', data=data1, color="darkgreen")
-        ax3.plot('x_values', 'y_predict', '--', data=data2, color="dodgerblue")
-
-    # plt.ylim(0, None)
+        ax3.plot(f'regression_{X_axis}', f'regression_{Y_axis}', plot_label, data=data1, color=plot_color)
+        ax3.plot(f'regression_{X_axis}', f'regression_{Y_axis}', plot_label, data=data2, color=plot_color)
+    ax3.set_ylim(0, None)
+    # plt.legend()
     plt.show()
 
 
@@ -108,16 +120,16 @@ def draw_ampm_predict_scatter(X_axis, Y_axis, data1, data2):
     # ax3.scatter('real_x', 'predict_y', data=data2, color='blue', s=8)
 
     plt, ax1, ax2, ax3 = struct_ampm_scatterplot(X_axis, Y_axis)
-    ax1.scatter('real_datetime', 'real_y', data=data1, color='lightgray', s=8)
-    ax1.scatter('real_datetime', 'predict_y', data=data1, color='red', s=8)
+    ax1.scatter('real_datetime', f'real_{Y_axis}', data=data1, color='lightgray', s=8)
+    ax1.scatter('real_datetime', f'predict_{Y_axis}', data=data1, color='red', s=8)
 
-    ax2.scatter('real_datetime', 'real_y', data=data2, color='lightgray', s=8)
-    ax2.scatter('real_datetime', 'predict_y', data=data2, color='red', s=8)
+    ax2.scatter('real_datetime', f'real_{Y_axis}', data=data2, color='lightgray', s=8)
+    ax2.scatter('real_datetime', f'predict_{Y_axis}', data=data2, color='red', s=8)
 
-    ax3.scatter('real_datetime', 'real_y', data=data1, color='lightgray', s=8)
-    ax3.scatter('real_datetime', 'real_y', data=data2, color='lightgray', s=8)
-    ax3.scatter('real_datetime', 'predict_y', data=data1, color='red', s=8)
-    ax3.scatter('real_datetime', 'predict_y', data=data2, color='blue', s=8)
+    ax3.scatter('real_datetime', f'real_{Y_axis}', data=data1, color='lightgray', s=8)
+    ax3.scatter('real_datetime', f'real_{Y_axis}', data=data2, color='lightgray', s=8)
+    ax3.scatter('real_datetime', f'predict_{Y_axis}', data=data1, color='red', s=8)
+    ax3.scatter('real_datetime', f'predict_{Y_axis}', data=data2, color='blue', s=8)
 
     plt.show()
 
@@ -151,35 +163,35 @@ def struct_am_noon_pm_scatterplot(X_axis, Y_axis):
 def draw_am_noon_pm_scatterplot(X_axis, Y_axis, data1, data2, data3, draw_regression=False):
     plt, ax1, ax2, ax3, ax4= struct_am_noon_pm_scatterplot(X_axis, Y_axis)
 
-    ax1.scatter('x', 'y', data=data1, color='lightgray', s=8)
-    ax1.scatter('filtered_x', 'filtered_y', data=data1, color='red', s=8)
+    ax1.scatter(X_axis, Y_axis, data=data1, color='lightgray', s=8)
+    ax1.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data1, color='red', s=8)
     if draw_regression:
-        ax1.plot('x_values', 'y_predict', '--', data=data1, color="darkgreen")
-        ax1.text(min(data1['filtered_x']), max(data1['filtered_y']), data1['equation'], fontsize=6)
+        ax1.plot(f'regression_{X_axis}', f'regression_{Y_axis}', '--', data=data1, color="darkgreen")
+        # ax1.text(min(data1['filtered_x']), max(data1['filtered_y']), data1['equation'], fontsize=6)
 
-    ax2.scatter('x', 'y', data=data2, color='lightgray', s=8)
-    ax2.scatter('filtered_x', 'filtered_y', data=data2, color='red', s=8)
+    ax2.scatter(X_axis, Y_axis, data=data2, color='lightgray', s=8)
+    ax2.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data2, color='red', s=8)
     if draw_regression:
-        ax2.plot('x_values', 'y_predict', '--', data=data2, color="darkgreen")
-        ax2.text(min(data2['filtered_x']), max(data2['filtered_y']), data2['equation'], fontsize=6)
+        ax2.plot(f'regression_{X_axis}', f'regression_{Y_axis}', '--', data=data2, color="darkgreen")
+        # ax2.text(min(data2['filtered_x']), max(data2['filtered_y']), data2['equation'], fontsize=6)
 
-    ax3.scatter('x', 'y', data=data3, color='lightgray', s=8)
-    ax3.scatter('filtered_x', 'filtered_y', data=data3, color='red', s=8)
+    ax3.scatter(X_axis, Y_axis, data=data3, color='lightgray', s=8)
+    ax3.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data3, color='red', s=8)
     if draw_regression:
-        ax3.plot('x_values', 'y_predict', '--', data=data3, color="darkgreen")
-        ax3.text(min(data3['filtered_x']), max(data3['filtered_y']), data3['equation'], fontsize=6)
+        ax3.plot(f'regression_{X_axis}', f'regression_{Y_axis}', '--', data=data3, color="darkgreen")
+        # ax3.text(min(data3['filtered_x']), max(data3['filtered_y']), data3['equation'], fontsize=6)
 
-    ax4.scatter('x', 'y', data=data1, color='lightgray', s=8)
-    ax4.scatter('x', 'y', data=data2, color='lightgray', s=8)
-    ax4.scatter('x', 'y', data=data3, color='lightgray', s=8)
-    ax4.scatter('filtered_x', 'filtered_y', data=data1, color='red', s=8)
-    ax4.scatter('filtered_x', 'filtered_y', data=data2, color='blue', s=8)
-    ax4.scatter('filtered_x', 'filtered_y', data=data3, color='green', s=8)
+    ax4.scatter(X_axis, Y_axis, data=data1, color='lightgray', s=8)
+    ax4.scatter(X_axis, Y_axis, data=data2, color='lightgray', s=8)
+    ax4.scatter(X_axis, Y_axis, data=data3, color='lightgray', s=8)
+    ax4.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data1, color='red', s=8)
+    ax4.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data2, color='blue', s=8)
+    ax4.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data3, color='green', s=8)
 
     if draw_regression:
-        ax4.plot('x_values', 'y_predict', '--', data=data1, color="darkred")
-        ax4.plot('x_values', 'y_predict', '--', data=data2, color="dodgerblue")
-        ax4.plot('x_values', 'y_predict', '--', data=data3, color="darkgreen")
+        ax4.plot(f'regression_{X_axis}', f'regression_{Y_axis}', '--', data=data1, color="darkred")
+        ax4.plot(f'regression_{X_axis}', f'regression_{Y_axis}', '--', data=data2, color="dodgerblue")
+        ax4.plot(f'regression_{X_axis}', f'regression_{Y_axis}', '--', data=data3, color="darkgreen")
 
     # plt.ylim(0, None)
     plt.show()

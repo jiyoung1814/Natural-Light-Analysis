@@ -41,13 +41,13 @@ EXCLUDED_24_SEASONS_DATES = {
 VERIFICATION_24_SEASONS_DATES = {
     "입춘": '2023-01-30',
     "우수": '2020-02-23',  # 희망편: '2023-03-02', 절망편: '2023-02-25'
-    "경칩": '2023-03-02',  # 희망편: '2023-03-02', 절망편: '2023-03-05'
+    "경칩": '2024-03-10',  # 희망편: '2023-03-02', '2024-03-09','2024-03-10'  절망편: '2023-03-05',
     "춘분": '2023-03-21',  # 희망편: '2023-03-21', 절망편: '2020-03-18'
     "청명": '2020-04-08',  # 희망편: 2020-04-08(3,4~8%), 2022-03-29(오후는 절망), 절망편: 2022-04-04
     "곡우": '',
     "입하": '',
     "소만": '2023-05-15',
-    "망종": '2019-06-03',  # 2019-06-03, '2022-05-13'
+    "망종": '2022-05-31',  # 희망편: '2022-05-31', 절망편: 2019-06-03, '2022-05-13'
     "하지": '2019-06-24',
     "소서": '',
     '대서': '',
@@ -58,18 +58,21 @@ VERIFICATION_24_SEASONS_DATES = {
     '한로': '2019-10-13',  # 희망편: '2022-10-12','2019-10-13',  절망편:
     '상강': '2022-10-18',
     '입동': '',
-    '소설': '',
-    '대설': '2023-12-01', #절망편: 2023-12-03, 2023-12-08, 2021-12-05
+    '소설': '2023-11-25',  # 희망편: '2023-11-25'
+    '대설': '2021-12-13',  # 희망편: 2023-12-01, 약간의 희망: 2021-12-13, 절망편: 2023-12-03, 2023-12-08, 2021-12-05
     '동지': '2022-12-24',  # '2022-12-24', 절망편'2021-12-22',  '2020-12-19'
-    '소한': '',
-    '대한': '',
+    '소한': '2023-01-02',  # 약간의 희망: '2023-01-02'
+    '대한': '2022-01-18',  # 희망편: '2022-01-18'(오후 데이터 손 봐야함) , 약간의 희망: '2023-01-25'
 
 }
 
 
-def getDataFromPlatform(sunrise_sunset=True, visual=True):
+def getDataFromPlatform(sunrise_sunset=True, visual=True, target_seasons=[]):
     '''
     WITLAB Platform으로 부터 데이터 받아옴
+    :param sunrise_sunset: Lwct 일출 일몰 적용, False:KASI 일출 일몰 적용
+    :param visual: True => 380-780nm, False => 210_400nm
+    :param target_seasons: 원하는 절기만 get
     :return: {'season': np.array[DayData, ...]}
     '''
 
@@ -85,12 +88,16 @@ def getDataFromPlatform(sunrise_sunset=True, visual=True):
     DayDataCalc → 타임스탬프 획득 (SPD 획득에 필요한 타임스탬프)
     SPD Real → 파장 데이터 획득 (input : 타임스탬프)
     '''
+    # day_data_seasons = {k: np.array([]) for k in os.getenv('seasons_names').split(",")}
+    if len(target_seasons) == 0:
+        target_seasons = os.getenv('seasons_names').split(",")
 
-    day_data_seasons = {k: np.array([]) for k in os.getenv('seasons_names').split(",")}
+    day_data_seasons = {k: np.array([]) for k in target_seasons}
     for key, dates in days_seasons.items():
-        for d in dates:
-            print(d)
-            day_data_seasons[key] = np.append(day_data_seasons[key], getDayData(d, sunrise_sunset, visual))
+        if key in target_seasons:
+            for d in dates:
+                print(d)
+                day_data_seasons[key] = np.append(day_data_seasons[key], getDayData(d, sunrise_sunset, visual))
     return day_data_seasons
 
 
@@ -110,21 +117,38 @@ def getDataFromDB(db, collection):
     return data
 
 
-def classify_24_seasons(days_info):
+def classify_24_seasons(days_info, return_only_dates = True):
     '''
     24절기별로 date를 나눔
     :param days_info: np.array([class: DayInfo])
-    :return: np.array([dates(class:str)])
+    :return: {season:np.array([dates(class:str)])} or  return_only_dates: False => {season:np.array([Day_info])}
     '''
     seasons_name = os.getenv('seasons_names').split(',')
 
     days_by_24_season_dic = {k: np.array([]) for k in seasons_name}
 
     for d_i in days_info:
-        days_by_24_season_dic[d_i.nearSeasonName] = np.append(days_by_24_season_dic[d_i.nearSeasonName], d_i.date)
-
+        if return_only_dates:
+            days_by_24_season_dic[d_i.nearSeasonName] = np.append(days_by_24_season_dic[d_i.nearSeasonName], d_i.date)
+        else:
+            days_by_24_season_dic[d_i.nearSeasonName] = np.append(days_by_24_season_dic[d_i.nearSeasonName], d_i)
     return days_by_24_season_dic
 
+
+def dataExcluding(data, exclude_dates=[]):
+    '''
+
+    :param data: np.array([DayData dict])
+    :param exclude_dates: 해당 날짜 데이터 제거
+    :return: np.array([DayData dict])
+    '''
+    exclude_data = np.array([])
+
+    for d in data:
+        if DatetimeToStr(d['datetime'], "%Y-%m-%d") not in exclude_dates:
+            exclude_data = np.append(exclude_data, d)
+
+    return exclude_data
 
 def dataClassifying(data, timeslice=[]):
     '''
@@ -156,11 +180,13 @@ def classify_am_pm(data):
     am = np.array([])
     pm = np.array([])
 
+    over = 10.0
+
     for d in data:
         try:
-            if d.azimuth < float(os.getenv('noon_az')) + 10.0:
+            if d.azimuth < float(os.getenv('noon_az')) + over:
                 am = np.append(am, d)
-            if (float(os.getenv('noon_az')) - 10.0) <= d.azimuth:
+            if (float(os.getenv('noon_az')) - over) <= d.azimuth:
                 pm = np.append(pm, d)
         except Exception as e:
             print(f'classify_am_pm Error - {d.datetime}: {e}')
@@ -229,17 +255,20 @@ def saveDataFromPlatform(db, data, am_pm=True):
         print(f'{season} data 저장')
 
 
-def getRequiredData(data, elements):
+def getRequiredData(data, elements, essential=['datetime']):
     '''
     필요한 요소들로만 DayDaty dict
     :param data: np.array([DayData, ...])
-    :param elements: require한 요소들(defalt: datetime)
-    :return: np.array([DayData])
+    :param elements: require한 요소들
+    :param essential: 기본 요소들 list ex) defalt: ['datetime']
+    :return: np.array([DayData Dict])
     '''
     required_datas = []
     for d in data:
         filtered_data = {}
-        filtered_data['datetime'] = getattr(d, "datetime")
+        for ee in essential:
+            filtered_data[ee] = getattr(d, ee)
+
         for e in elements:
             if e.isdigit():
                 filtered_data[e] = getattr(d, "spd")[e]
@@ -249,15 +278,16 @@ def getRequiredData(data, elements):
     return required_datas
 
 
-def dataFiltering(data, element_x, element_y, top_percentage=2, end_percentage=8, range_x=1):
+def dataFiltering(data, element_x, element_y, start_percentage=2, end_percentage=8, range_x=1, top=True):
     '''
     x축의 range 내의 상위 p% 데이터 산출 ex) elevation 0~1, 1~2 ... 의 상위 2~8% 데이터 (range_x == 1)
     :param data: np.array([DayData dict,...])
     :param field_x: x축
     :param field_y: y축
-    :param top_percentage: 상위 percentage
+    :param start_percentage: 상위 percentage
     :param end_percentage: 하위 percentage
     :param range_x: x축 range
+    :param top: True = 상위 or False = 하위
     :return: np.array([DayData dict,...])
     '''
 
@@ -269,10 +299,17 @@ def dataFiltering(data, element_x, element_y, top_percentage=2, end_percentage=8
         # x축 range 범위 데이터 추출
         filtered_by_x_data = [d for d in data if x <= d[element_x] < x + 1]
 
-        # y축 상위 p% 데이터 추출
-        y_values = [d[element_y] for d in filtered_by_x_data]
-        upper_threshold = np.percentile(y_values, 100 - top_percentage)
-        lower_threshold = np.percentile(y_values, 100 - end_percentage)
+
+        if top is True:
+            # y축 상위 p% 데이터 추출
+            y_values = [d[element_y] for d in filtered_by_x_data]
+            upper_threshold = np.percentile(y_values, 100 - start_percentage)
+            lower_threshold = np.percentile(y_values, 100 - end_percentage)
+        else:
+            y_values = [d[element_y] for d in filtered_by_x_data]
+            lower_threshold = np.percentile(y_values, start_percentage)
+            upper_threshold = np.percentile(y_values, end_percentage)
+        # print(f'{x}:{lower_threshold} {upper_threshold} ~ ')
 
         extracted_data = [d for d in filtered_by_x_data if lower_threshold <= d[element_y] <= upper_threshold]
         filtered_data = np.append(filtered_data, extracted_data)

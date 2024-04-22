@@ -55,7 +55,7 @@ def polynomial_regression_line_data(x, model):
 
     equation = polynomial_equation(model)
 
-    return x_values, y_predict, equation
+    return [x[0] for x in x_values], y_predict, equation
 
 
 def predict_regression(x, model):
@@ -100,6 +100,7 @@ def best_polynomial_linear_regression_model(x, y, degrees=[2,3,4,5], intercept=T
         model.fit(x_poly, y)
 
         r2_score = model.score(x_poly, y)
+        # print(f'{degree}_degree_r2_score: {r2_score}')
         if r2_score > best_r2_score:
             best_model = model
 

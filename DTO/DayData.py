@@ -24,6 +24,24 @@ class DayData:
         self.v1976 = data['v1976']
         self.deltaUV = data['deltaUV']
 
+        # 위성 데이터
+        self.gkb01_kc = data['gkB01_KC']
+        self.gkb02_kc = data['gkB02_KC']
+        self.gkb03_kc = data['gkB03_KC']
+        self.gkb04_kc = data['gkB04_KC']
+        self.gkb05_kc = data['gkB05_KC']
+        self.gkb06_kc = data['gkB06_KC']
+        self.gkb07_kc = data['gkB07_KC']
+        self.gkb08_kc = data['gkB08_KC']
+        self.gkb09_kc = data['gkB09_KC']
+        self.gkb10_kc = data['gkB10_KC']
+        self.gkb11_kc = data['gkB11_KC']
+        self.gkb12_kc = data['gkB12_KC']
+        self.gkb13_kc = data['gkB13_KC']
+        self.gkb14_kc = data['gkB14_KC']
+        self.gkb15_kc = data['gkB15_KC']
+        self.gkb16_kc = data['gkB16_KC']
+
         if source == 'DB':
             # self.azimuth = data['az']
             # self.elevation = data['el']
@@ -66,6 +84,8 @@ class DayData:
 
             self.spd = {}
             self.intgtime = 0
+
+
 
 
     def setSPD(self, spds, wavelength=[str(w) for w in range(380, 781)]):

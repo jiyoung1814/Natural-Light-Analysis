@@ -20,6 +20,7 @@ def getSignature(timestamp, nonce):
 def setHeaders():
     now = datetime.now()
     timestamp = DatetimeToTimestamp(now)
+    # print(f"timestamp: {timestamp}")
 
     # nonce = secrets.token_hex(16)  # (16바이트) 16진수 secure random number 생성
     nonce = str(uuid.uuid4())
