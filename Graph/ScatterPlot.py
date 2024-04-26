@@ -5,29 +5,6 @@ import numpy as np
 colors = ['black', 'red', 'blue', 'orange', 'purple', 'gray']
 
 
-# def draw_scatterplot(x1, y1, y1_label='y1', X_axis='X Axis', Y_axis='Y Axis', x2=None, y2=None, y2_label='y2',
-#                      secondary_axis=False, Y2_axis='Y2 Axis'):
-#     fig, ax = plt.subplots()
-#
-#     ax.scatter(x1, y1, label=y1_label, color=colors[0])
-#
-#     ax.set_xlabel(X_axis)
-#     ax.set_ylabel(Y_axis)
-#
-#     if y2 is not None:
-#         if secondary_axis:
-#             ax2 = ax.twinx()
-#             ax2.set_ylabel(Y2_axis)
-#         else:
-#             ax2 = ax
-#
-#         ax2.scatter(x2, y2, label=y2_label, color=colors[1])
-#
-#     # plt.legend()
-#
-#     plt.show()
-
-
 def struct_ampm_scatterplot(X_axis, Y_axis):
     if Y_axis.isdigit():
         Y_axis = 'Spectral Irradiance[W/m^2]'
@@ -84,27 +61,12 @@ def draw_ampm_scatterplot(X_axis, Y_axis, data1, data2, draw_regression=False):
     ax3.scatter(f'filtered_{X_axis}', f'filtered_{Y_axis}', data=data2, color=y_color, s=8)
 
     if draw_regression:
-        ax3.plot(f'regression_{X_axis}', f'regression_{Y_axis}', plot_label, data=data1, color=plot_color)
-        ax3.plot(f'regression_{X_axis}', f'regression_{Y_axis}', plot_label, data=data2, color=plot_color)
+        ax3.plot(f'regression_{X_axis}', f'regression_{Y_axis}', plot_label, data=data1, color='red')
+        ax3.plot(f'regression_{X_axis}', f'regression_{Y_axis}', plot_label, data=data2, color='blue')
     ax3.set_ylim(0, None)
     # plt.legend()
     plt.show()
 
-
-# def draw_ampm_regression_scatterplot(data1, data2, X_axis='X_axis', Y_axis='Y_axis'):
-#     fig = plt.figure(figsize=(16, 8))
-#
-#     plt.scatter('x', 'y', data=data1, color='lightgray', s=8)
-#     plt.scatter('x', 'y', data=data2, color='lightgray', s=8)
-#     plt.scatter('filtered_x', 'filtered_y', data=data1, color='red', s=8)
-#     plt.scatter('filtered_x', 'filtered_y', data=data2, color='blue', s=8)
-#     plt.plot('x_values', 'y_predict', '--', data=data1, color="darkgreen")
-#     plt.plot('x_values', 'y_predict', '--', data=data2, color="dodgerblue")
-#
-#     plt.xlabel(X_axis)
-#     plt.ylabel(Y_axis)
-#
-#     plt.show()
 
 def draw_ampm_predict_scatter(X_axis, Y_axis, data1, data2):
     # plt, ax1, ax2, ax3 = struct_ampm_scatterplot(X_axis, Y_axis)
@@ -215,3 +177,56 @@ def draw_am_noon_pm_predict_scatter(X_axis, Y_axis, data1, data2, data3):
     ax4.scatter('real_datetime', 'predict_y', data=data3, color='green', s=8)
 
     plt.show()
+
+
+def struct_satellite_scatterplot(X_axis, Y_axis):
+    '''
+
+    :param X_axis: str
+    :param Y_axis: list[str, str...]
+    :return: ax list[ax, ax, ax]
+    '''
+
+    if X_axis == 'elevation':
+        X_axis = X_axis + "[°]"
+    gs = GridSpec(2, int(len(Y_axis)/2))
+    fig = plt.figure(figsize=(16, 9))
+    plt.subplots_adjust(wspace=0.4, hspace=0.5)
+
+    ax = []
+    for i in range(len(Y_axis)):
+        if i < len(Y_axis)/2:
+            ax.append(fig.add_subplot(gs[0, int(i % (len(Y_axis)/2))]))
+        else:
+            ax.append(fig.add_subplot(gs[1, int(i % (len(Y_axis) / 2))]))
+
+        ax[i].set_xlabel(X_axis)
+
+        if Y_axis[i] in ['gkb01_kc','gkb02_kc','gkb03_kc','gkb04_kc','gkb05_kc','gkb06_kc']:
+            ax[i].set_ylabel(Y_axis[i]+"Radiance[W/m2srμm]")
+        elif Y_axis[i] in ['gkb07_kc','gkb08_kc','gkb09_kc','gkb10_kc','gkb11_kc','gkb12_kc','gkb13_kc','gkb14_kc','gkb15_kc','gkb16_kc']:
+            ax[i].set_ylabel(Y_axis[i] + "Radiance[mW/m^2/sr/cm^-1]")
+        elif Y_axis[i] == 'lux':
+            ax[i].set_ylabel("Illuminance[lux]")
+
+    return plt, ax
+
+def draw_satellite_scatterplot(X_axis, Y_axis, data):
+    '''
+    :param X_axis: str (ex elevation)
+    :param Y_axis: list[filter_y, filter_y, filter_y,]
+    :param data: dict{ percentage: [{DayData dic}, {}..]}
+    :return:
+    '''
+    plt, ax = struct_satellite_scatterplot(X_axis, Y_axis)
+    colors = ['red', 'coral', 'orange', 'gold', 'yellow', 'lightgreen', 'green', 'skyblue', 'blue', 'purple']
+
+    for i, y_axis in enumerate(Y_axis):
+        for p, d in data.items():
+            ax[i].scatter([x[X_axis] for x in d], [y[y_axis] for y in d], label = f'{p}~{p+10}%', color = colors[int(p/10)])
+        ax[i].legend()
+        # ax[i].set_ylim(0, None)
+
+    plt.show()
+
+
