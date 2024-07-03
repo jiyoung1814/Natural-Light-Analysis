@@ -110,9 +110,10 @@ def getDayDataCalc(date, sunrise_sunset=True):
 
     response = requests.get(os.getenv('url') + 'v2/natural/day_calc', headers=setHeaders(), data=json.dumps(data).encode('utf-8'))
 
+    # print(response.json())
+
     dayData_arr = np.array([])
     for time_data in response.json():
-        print(time_data)
         dayData = DayData(time_data, source='Platform')
         dayData_arr = np.append(dayData_arr, dayData)
     return dayData_arr
@@ -176,20 +177,21 @@ def getSPD(ts, visual= True):
     return spd, intgtime
 
 
-def get_satellite(datetime):
-    directory = os.getenv('save_folder_path')+'/satellite/'
-    for dt in datetime:
-        url = f'https://apihub-org.kma.go.kr/api/typ05/api/GK2A/LE1B/VI006/KO/data?date={dt}&authKey=6WQFK4xVQTakBSuMVWE29A'
-        response = requests.get(url)
-        if response.status_code == 200:
-            content_type = response.headers.get('Content-Type')
-            if content_type == 'application/x-netcdf':
-                filepath = os.path.join(directory, f'{dt}.nc')
-                with open(filepath, 'wb') as f:
-                    f.write(response.content)
-        else:
-            print("Failed to download the file. Status code:", response.status_code)
-
-
-
+# def get_satellite(datetime):
+#     directory = os.getenv('save_folder_path')+'/satellite/'
+#     for dt in datetime:
+#         url = f'https://apihub-org.kma.go.kr/api/typ05/api/GK2A/LE1B/VI006/KO/data?date={dt}&authKey=6WQFK4xVQTakBSuMVWE29A'
+#         response = requests.get(url)
+#         if response.status_code == 200:
+#             content_type = response.headers.get('Content-Type')
+#             if content_type == 'application/x-netcdf':
+#                 filepath = os.path.join(directory, f'{dt}.nc')
+#                 with open(filepath, 'wb') as f:
+#                     f.write(response.content)
+#         else:
+#             print("Failed to download the file. Status code:", response.status_code)
+#
+#
+#
+#
 

@@ -54,7 +54,7 @@ VERIFICATION_24_SEASONS_DATES = {
     '입추': '',
     '처서': '',
     '백로': '',
-    '추분': '2019-09-18',  # 희망편: 2019-09-18, 절망편: '2022-09-30'
+    '추분': '2022-09-27',  # 희망편: 2019-09-18, 절망편: '2022-09-30'
     '한로': '2019-10-13',  # 희망편: '2022-10-12','2019-10-13',  절망편:
     '상강': '2022-10-18',
     '입동': '',
@@ -97,6 +97,8 @@ def getDataFromPlatform(sunrise_sunset=True, visual=True, target_seasons=[]):
         if key in target_seasons:
             for d in dates:
                 print(d)
+            #     break
+            # break
                 day_data_seasons[key] = np.append(day_data_seasons[key], getDayData(d, sunrise_sunset, visual))
     return day_data_seasons
 
@@ -319,3 +321,6 @@ def dataFiltering(data, element_x, element_y, start_percentage=2, end_percentage
 
 def getVerificationDate(season):
     return VERIFICATION_24_SEASONS_DATES[season]
+
+
+

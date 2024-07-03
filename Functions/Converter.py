@@ -42,4 +42,16 @@ def TimestampToStrDatetime_v1(ts, type='%Y-%m-%d %H:%M:%S'):
     return DatetimeToStr(dt, type)
 
 
-
+def class_to_dict(obj):
+    if hasattr(obj, '__dict__'):
+        data = {}
+        for key, value in obj.__dict__.items():
+            if isinstance(value, list):
+                data[key] = [class_to_dict(item) for item in value]
+            elif hasattr(value, '__dict__'):
+                data[key] = class_to_dict(value)
+            else:
+                data[key] = value
+        return data
+    else:
+        return obj
