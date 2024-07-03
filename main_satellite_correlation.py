@@ -1,15 +1,18 @@
 from dotenv import load_dotenv
-import numpy as np
+import os
 from DB.mongoDB import MongoDB
 from Functions.Natrual import dataClassifying, getRequiredData, dataFiltering, getDataFromDB,  dataExcluding
 from Graph.ScatterPlot import draw_satellite_scatterplot
+from Functions.File import saveExcel
+import seaborn as sb
+import pandas as pd
 
 
 if __name__ == '__main__':
     load_dotenv()
 
     # seasons = ['경칩', '추분', '동지', '하지']
-    seasons = ['추분']
+    seasons = ['경칩']
     # seasons = os.getenv('seasons_names').split(',')
     field_x = 'elevation'
     essential = ['datetime']
@@ -46,7 +49,9 @@ if __name__ == '__main__':
     # -----DB-----
     # mongoDB 연결
     mongo = MongoDB()
-    mongo.connect_DB()
+    mongo.connect_DB('Natural_Satellite')
+
+    mode = 'graph_by_ch' #saveExcel, graph_all, graph_by_ch
 
 
     for season in seasons:
@@ -64,12 +69,20 @@ if __name__ == '__main__':
             filtered_p_data = {}
             for p in range(f_start_percentage, f_end_percentage, f_step_percentage):
                 filtered_p_data[p] = dataFiltering(exclude_data, field_x, field_ys[0], start_percentage=p, end_percentage=(p + 10), range_x=1, top=True)
+                if mode == 'saveExcel':
+                    saveExcel(filtered_p_data[p], os.getenv('save_folder_path') + f'correlation/', f'percentage_by_{field_ys[0]}_{season}_{time}', f'{p}')
+                    corr = pd.DataFrame(list(filtered_p_data[p]), columns=list(filtered_p_data[p][0].keys())).corr()
+                    saveExcel(corr, os.getenv('save_folder_path') + f'correlation/', f'percentage_by_{field_ys[0]}_{season}_{time}_corr', f'{p}')
 
-            # draw_satellite_scatterplot(field_x, filter_ys, filtered_p_data)
+            if mode == 'saveExcel':
+                corr = pd.DataFrame(list(exclude_data), columns=list(exclude_data[0].keys())).corr()
+                saveExcel(corr, os.getenv('save_folder_path') + f'correlation/',f'percentage_by_{field_ys[0]}_{season}_{time}_corr', f'100')
 
-            draw_satellite_scatterplot(field_x, ['lux', filter_ys[0]], filtered_p_data)
+            if mode == 'graph_all':
+                draw_satellite_scatterplot(field_x, filter_ys, filtered_p_data)
 
-            for i in range(0, len(filter_ys), 2):
-                draw_satellite_scatterplot(field_x, [filter_ys[i], filter_ys[i+1]], filtered_p_data)
-            break
+            if mode == 'graph_by_ch':
+                draw_satellite_scatterplot(field_x, ['lux', filter_ys[0]], filtered_p_data)
+                for i in range(0, len(filter_ys), 2):
+                    draw_satellite_scatterplot(field_x, [filter_ys[i], filter_ys[i+1]], filtered_p_data)
 

@@ -40,12 +40,16 @@ def saveExcel(data={}, path='', file_name='excel', sheet_name='sheet', orient='c
         elif isinstance(data, dict):
             data = pd.DataFrame.from_dict(data, orient=orient)
 
+        if not os.path.exists(path):
+            os.makedirs(path)
+            print(f'{path} 폴더 생성')
+
         if (file_name + '.xlsx') in os.listdir(path):
-            print(f'{path}{file_name}.xlsx 생성')
             with pd.ExcelWriter((path + file_name + '.xlsx'), engine='openpyxl', mode='a') as writer:
                 data.to_excel(writer, sheet_name=sheet_name)
             print(f'{path}{file_name}.xlsx => {sheet_name} 저장')
         else:
+            print(f'{path}{file_name}.xlsx 생성')
             with pd.ExcelWriter((path + file_name + '.xlsx'), engine='openpyxl') as writer:
                 data.to_excel(writer, sheet_name=sheet_name)
             print(f'{path}{file_name}.xlsx => {sheet_name} 저장')

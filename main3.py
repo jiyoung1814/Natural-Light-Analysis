@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # field_ys = ['lux', '380', '580', '780']
     # seasons = os.getenv('seasons_names').split(",")
     # seasons = ['경칩', '망종', '한로', '동지']
-    seasons = ['경칩']
+    seasons = ['하지']
     time_slice = ['am', 'pm']
 
     # filtering percentage

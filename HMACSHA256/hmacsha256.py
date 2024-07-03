@@ -31,6 +31,7 @@ def setHeaders():
     # print("signature: " + signature.decode('ascii'))
 
     headers = {
+        # 'Content': 'application/json; charset=utf-8',
         'timestamp': str(timestamp),
         'nonce': nonce,
         'accessKey': os.getenv('ADMIN_KEY_ACCESS'),

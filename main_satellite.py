@@ -11,7 +11,7 @@ from Graph.ScatterPlot import draw_ampm_scatterplot, draw_ampm_predict_scatter
 if __name__ == '__main__':
     load_dotenv()
 
-    # seasons = ['경칩', '추분','추분', '동지', '하지']
+    # seasons = ['추분','춘분', '동지', '하지']
     seasons = ['경칩']
     # seasons = os.getenv('seasons_names').split(',')
     field_x = 'elevation'
@@ -19,13 +19,13 @@ if __name__ == '__main__':
     time_slice = ['am', 'pm']
 
     field_ys = ['lux']
-    field_ys = [str(w) for w in range(380, 781)]
+    # field_ys = [str(w) for w in range(380, 781)]
 
     # filtering percentage
     start_percentage = 2
     end_percentage = 8
 
-    filter_ys = ['gkb11_kc']  # filter_ys를 기반으로 필터링
+    filter_ys = ['gkb05_kc']  # filter_ys를 기반으로 필터링
     # satellite filtering percentage
     s_start_percentage = 0
     s_end_percentage = 10
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     degrees = [2, 3, 4, 5]
     intercept = True  # y절편 유무
 
-    mode = 'save_DB'  # 그래프 그리거나(graph) 데이터 저장하거나(save_filtering or save_regression or save_raw), API에서 데이터 받아서 DB에 저장(save_DB)
+    mode = 'graph'  # 그래프 그리거나(graph) 데이터 저장하거나(save_filtering or save_regression or save_raw), API에서 데이터 받아서 DB에 저장(save_DB)
 
     if mode == 'graph' or mode == 'save_regression':
         # test data
@@ -54,17 +54,15 @@ if __name__ == '__main__':
     # -----DB-----
     # mongoDB 연결
     mongo = MongoDB()
-    mongo.connect_DB('Satellite')
+    mongo.connect_DB('Natural_Satellite')
 
     if mode == 'save_DB':  # # DB에 데이터 저장
-        data = getDataFromPlatform(sunrise_sunset=False, visual=True, target_seasons=seasons)
+        data = getDataFromPlatform(sunrise_sunset=True, visual=True, target_seasons=seasons)
         saveDataFromPlatform(db=mongo, data=data, am_pm=False)
 
     else:
-
         for season in seasons:
             season_data = getDataFromDB(mongo, f'{season}')
-
             classified_data = dataClassifying(season_data, timeslice=time_slice)
 
             for filter_y in filter_ys:
@@ -88,7 +86,6 @@ if __name__ == '__main__':
 
                     # filtering
                     if any(col in filter_y for col in ['gk']):  # satellite data => 하위 0~8%
-
                         preprocessed_data = [d for d in required_data if d[filter_y] >= satellite_threshold[filter_y]]
                         filtered_data = dataFiltering(preprocessed_data, field_x, filter_y,
                                                       start_percentage=s_start_percentage,
@@ -118,8 +115,8 @@ if __name__ == '__main__':
 
                         if mode == 'save_filtering':
                             # print(data_dict)
-                            saveExcel(data_dict, os.getenv('save_folder_path') + '/satellite/',
-                                      f'{season}_{field_x}_filtered_{filter_y}_{s_start_percentage}_to_{s_end_percentage}.xlsx',
+                            saveExcel(data_dict, os.getenv('save_folder_path') + 'satellite/',
+                                      f'{season}_{field_x}_filtered_{filter_y}_{s_start_percentage}_to_{s_end_percentage}_.xlsx',
                                       f'{field_y}_{time}', orient='columns')
                             continue
 
